@@ -94,7 +94,7 @@ public class FibonacciHeap
 			return;
 		}
 		//Create an array to store trees by rank, with a maximum rank of log(n+1)
-		int maxRank = (int) Math.log(size() + 1);
+		int maxRank = (int) Math.ceil(Math.log(size() + 1)) + 1;
 		HeapNode[] rankArray = new HeapNode[maxRank];
 		Arrays.fill(rankArray, null);
 
@@ -182,8 +182,8 @@ public class FibonacciHeap
 			min.next.prev = min.prev;
 		}
 		//Consolidate the heap
-		successiveLinking();
 		size--;
+		successiveLinking();
 	}
 
 	/**
@@ -288,4 +288,40 @@ public class FibonacciHeap
 			this.mark = false;
 		}
 	}
+	public void printHeap() {
+		if (min == null) {
+			System.out.println("Heap is empty.");
+			return;
+		}
+
+		System.out.println("Root list:");
+		HeapNode current = min;
+		do {
+			printSubTree(current, 0);
+			current = current.next;
+		} while (current != min);
+	}
+
+	private void printSubTree(HeapNode node, int depth) {
+		if (node == null) return;
+
+		// Indent based on depth
+		for (int i = 0; i < depth; i++) {
+			System.out.print("  ");
+		}
+
+		// Print the node
+		System.out.println("Key: " + node.key + ", Rank: " + node.rank);
+
+		// Print children
+		HeapNode child = node.child;
+		if (child != null) {
+			HeapNode temp = child;
+			do {
+				printSubTree(temp, depth + 1);
+				temp = temp.next;
+			} while (temp != child);
+		}
+	}
+
 }
