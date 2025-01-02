@@ -1,3 +1,5 @@
+import java.util.Arrays;
+
 /**
  * FibonacciHeap
  *
@@ -40,6 +42,15 @@ public class FibonacciHeap
 		return newNode;
 	}
 	/**
+	 * 
+	 * Return the minimal HeapNode, null if empty.
+	 *
+	 */
+	public HeapNode findMin()
+	{
+		return min;
+	}
+	/**
 	 *
 	 * Link two trees of the same rank
 	 * pre: child.rank = parent.rank
@@ -54,14 +65,14 @@ public class FibonacciHeap
 
 		//Attach child to parent
 		if (parent.child == null)
-			//If parent has no children, set child as the only child
+		//If parent has no children, set child as the only child
 		{
 			parent.child = child;
 			child.next = child;
 			child.prev = child;
 		}
 		else
-			//If parent has children, add child to the left of parent child pointer
+		//If parent has children, add child to the left of parent child pointer
 		{
 			child.next = parent.child;
 			child.prev = parent.child.prev;
@@ -73,15 +84,59 @@ public class FibonacciHeap
 		child.mark = false; //In case child wasn't a tree root
 	}
 	/**
-	 * 
-	 * Return the minimal HeapNode, null if empty.
-	 *
+	 * Consolidate the heap
 	 */
-	public HeapNode findMin()
+	public void successiveLinking()
 	{
-		return min;
-	}
+		//Edge case: After deleting the min, the heap is empty or has only one tree
+		if (min == null || min.next == min)
+		{
+			return;
+		}
+		//Create an array to store trees by rank, with a maximum rank of log(n+1)
+		int maxRank = (int) Math.log(size() + 1);
+		HeapNode[] rankArray = new HeapNode[maxRank];
+		Arrays.fill(rankArray, null);
 
+		//Iterate over the root list
+		HeapNode current = min;
+		do
+		{
+			HeapNode node = current; //Keep reference to current node
+			current = current.next;
+			int currRank = node.rank;
+
+			// Link trees of the same rank, until reaching available slot in rankArray
+			while (rankArray[currRank] != null)
+			{
+				HeapNode other = rankArray[currRank];
+				//Determine which tree is the parent and which is the child
+				HeapNode parent = (node.key < other.key) ? node : other;
+				HeapNode child = (parent.equals(node)) ? other : node;
+				linkTrees(child, parent);
+				//Empty the slot in rankArray, update node to parent to make sure placement is correct
+				rankArray[currRank] = null;
+				node = parent;
+				currRank++;
+			}
+			rankArray[currRank] = node;
+
+
+		} while (current != min);
+
+		//Rebuild the root list
+		min = null;
+		for (HeapNode node : rankArray)
+		{
+			if (node != null)
+			{
+				if (min == null || node.key < min.key)
+				{
+					min = node;
+				}
+			}
+		}
+	}
 	/**
 	 * 
 	 * Delete the minimal item
@@ -89,8 +144,46 @@ public class FibonacciHeap
 	 */
 	public void deleteMin()
 	{
-		return; // should be replaced by student code
+		//Edge case: Heap is empty
+		if (min == null)
+		{
+			return;
+		}
+		//Edge case: Heap has only one tree
+		if (min.next == min)
+		{
+			min = null;
+			size--;
+			return;
+		}
+		//Take care of the children of the min node (if any)
+		if (min.child != null)
+		{
+			HeapNode firstChild = min.child;
+			HeapNode lastChild = min.child.prev;
 
+			//Detach children from min
+			HeapNode currentChild = firstChild;
+			while (currentChild.parent != null)
+			{
+				currentChild.parent = null;
+				currentChild = currentChild.next;
+			}
+			//Add children to root list
+			min.prev.next = firstChild;
+			firstChild.prev = min.prev;
+
+			lastChild.next = min.next;
+			min.next.prev = lastChild;
+		}
+		else
+		{
+			min.prev.next = min.next;
+			min.next.prev = min.prev;
+		}
+		//Consolidate the heap
+		successiveLinking();
+		size--;
 	}
 
 	/**
