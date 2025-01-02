@@ -16,8 +16,25 @@ public class FibonacciHeap
 	 *
 	 */
 	public HeapNode insert(int key, String info) 
-	{    
-		return null; // should be replaced by student code
+	{
+		HeapNode newNode = new HeapNode(key, info);
+
+		// If the heap is empty, create a new heap with a single node
+		if (min == null) {
+			min = newNode;
+			return min;
+		}
+		//Else, insert the new node to the right of the min node
+		newNode.next = min.next;
+		newNode.prev = min;
+		min.next.prev = newNode;
+		min.next = newNode;
+
+		//If the new node is smaller than the min node, update the min node
+		if (newNode.key < min.key) {
+			min = newNode;
+		}
+		return newNode;
 	}
 
 	/**
@@ -130,5 +147,17 @@ public class FibonacciHeap
 		public HeapNode parent;
 		public int rank;
 		public boolean mark;
+
+		public HeapNode(int key, String info)
+		{
+			this.key = key;
+			this.info = info;
+			this.child = null;
+			this.next = this; //Doubly circular linked list
+			this.prev = this;
+			this.parent = null;
+			this.rank = 0;
+			this.mark = false;
+		}
 	}
 }
