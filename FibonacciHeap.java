@@ -7,6 +7,7 @@
 public class FibonacciHeap
 {
 	public HeapNode min;
+	public int size;
 
 	/**
 	 * 
@@ -22,6 +23,7 @@ public class FibonacciHeap
 		// If the heap is empty, create a new heap with a single node
 		if (min == null) {
 			min = newNode;
+			size++;
 			return min;
 		}
 		//Else, insert the new node to the right of the min node
@@ -34,9 +36,42 @@ public class FibonacciHeap
 		if (newNode.key < min.key) {
 			min = newNode;
 		}
+		size++;
 		return newNode;
 	}
+	/**
+	 *
+	 * Link two trees of the same rank
+	 * pre: child.rank = parent.rank
+	 * pre: child.key < parent.key
+	 *
+	 */
+	public void linkTrees(HeapNode child, HeapNode parent)
+	{
+		//Remove child from root list
+		child.prev.next = child.next;
+		child.next.prev = child.prev;
 
+		//Attach child to parent
+		if (parent.child == null)
+			//If parent has no children, set child as the only child
+		{
+			parent.child = child;
+			child.next = child;
+			child.prev = child;
+		}
+		else
+			//If parent has children, add child to the left of parent child pointer
+		{
+			child.next = parent.child;
+			child.prev = parent.child.prev;
+			parent.child.prev.next = child;
+			parent.child.prev = child;
+			child.parent = parent;
+		}
+		parent.rank++;
+		child.mark = false; //In case child wasn't a tree root
+	}
 	/**
 	 * 
 	 * Return the minimal HeapNode, null if empty.
@@ -44,7 +79,7 @@ public class FibonacciHeap
 	 */
 	public HeapNode findMin()
 	{
-		return null; // should be replaced by student code
+		return min;
 	}
 
 	/**
@@ -120,7 +155,7 @@ public class FibonacciHeap
 	 */
 	public int size()
 	{
-		return 42; // should be replaced by student code
+		return this.size; //
 	}
 
 
