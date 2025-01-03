@@ -9,7 +9,10 @@ import java.util.Arrays;
 public class FibonacciHeap
 {
 	public HeapNode min;
+	//All added attributes are maintained in O(1) time
 	public int size;
+	public int linkCounter;
+	public int treeCounter;
 
 	/**
 	 * 
@@ -26,6 +29,7 @@ public class FibonacciHeap
 		if (min == null) {
 			min = newNode;
 			size++;
+			treeCounter++;
 			return min;
 		}
 		//Else, insert the new node to the right of the min node
@@ -39,6 +43,7 @@ public class FibonacciHeap
 			min = newNode;
 		}
 		size++;
+		treeCounter++;
 		return newNode;
 	}
 	/**
@@ -86,53 +91,62 @@ public class FibonacciHeap
 	/**
 	 * Consolidate the heap
 	 */
-	public void successiveLinking()
-	{
-		//Edge case: After deleting the min, the heap is empty or has only one tree
-		if (min == null || min.next == min)
-		{
+	public void successiveLinking() {
+		if (min == null || min.next == min) {
 			return;
 		}
-		//Create an array to store trees by rank, with a maximum rank of log(n+1)
+		// Create the "bucket" array
 		int maxRank = (int) Math.ceil(Math.log(size() + 1)) + 1;
 		HeapNode[] rankArray = new HeapNode[maxRank];
 		Arrays.fill(rankArray, null);
 
-		//Iterate over the root list
 		HeapNode current = min;
-		do
-		{
-			HeapNode node = current; //Keep reference to current node
-			current = current.next;
-			int currRank = node.rank;
+		HeapNode start = min; //exit condition for the do-while loop
 
-			// Link trees of the same rank, until reaching available slot in rankArray
-			while (rankArray[currRank] != null)
-			{
+		do {
+			HeapNode node = current;
+			current = current.next; // Move to the next node before modifying the root list
+
+			int currRank = node.rank;
+			// Recursively link trees of the same rank until slot available
+			while (rankArray[currRank] != null) {
 				HeapNode other = rankArray[currRank];
-				//Determine which tree is the parent and which is the child
+
+				// Link two trees of the same rank
 				HeapNode parent = (node.key < other.key) ? node : other;
-				HeapNode child = (parent.equals(node)) ? other : node;
+				HeapNode child = (parent == node) ? other : node;
 				linkTrees(child, parent);
-				//Empty the slot in rankArray, update node to parent to make sure placement is correct
+				linkCounter++;
+				treeCounter--;
+
 				rankArray[currRank] = null;
 				node = parent;
 				currRank++;
 			}
 			rankArray[currRank] = node;
 
-
-		} while (current != min);
-
-		//Rebuild the root list
+		} while (current != start);
+		// Rebuild root list and find the new min
 		min = null;
-		for (HeapNode node : rankArray)
-		{
-			if (node != null)
-			{
-				if (min == null || node.key < min.key)
-				{
+		for (HeapNode node : rankArray) {
+			if (node != null) {
+				if (min == null || node.key < min.key) {
 					min = node;
+				}
+				// Configure the new root list
+				if (min != node)
+				{
+					//If min is not the current node, add the node to the right of min
+					node.next = min.next;
+					node.prev = min;
+					min.next.prev = node;
+					min.next = node;
+				}
+				else
+				{
+					//First node in the list, or only node
+					node.next = node;
+					node.prev = node;
 				}
 			}
 		}
@@ -149,13 +163,8 @@ public class FibonacciHeap
 		{
 			return;
 		}
-		//Edge case: Heap has only one tree
-		if (min.next == min)
-		{
-			min = null;
-			size--;
-			return;
-		}
+		treeCounter--;
+		size--;
 		//Take care of the children of the min node (if any)
 		if (min.child != null)
 		{
@@ -176,14 +185,18 @@ public class FibonacciHeap
 			lastChild.next = min.next;
 			min.next.prev = lastChild;
 		}
+		//Remove min from root list and consolidate the heap
+		if (min.next.equals(min))
+		{
+			min = null;
+		}
 		else
 		{
 			min.prev.next = min.next;
 			min.next.prev = min.prev;
+			min = min.next; //Temporary min
+			successiveLinking();
 		}
-		//Consolidate the heap
-		size--;
-		successiveLinking();
 	}
 
 	/**
@@ -216,7 +229,7 @@ public class FibonacciHeap
 	 */
 	public int totalLinks()
 	{
-		return 0; // should be replaced by student code
+		return linkCounter;
 	}
 
 
@@ -259,7 +272,7 @@ public class FibonacciHeap
 	 */
 	public int numTrees()
 	{
-		return 0; // should be replaced by student code
+		return treeCounter;
 	}
 
 	/**
