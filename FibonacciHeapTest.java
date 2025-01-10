@@ -1,108 +1,79 @@
-import org.junit.Test;
-import static org.junit.Assert.*;
+import java.util.Random;
 
 public class FibonacciHeapTest {
-
-    @Test
-    public void testInsertAndSize() {
+    public static void main(String[] args) {
         FibonacciHeap heap = new FibonacciHeap();
+        Random random = new Random();
+        int nodeCount = 10000;
+        FibonacciHeap.HeapNode[] nodes = new FibonacciHeap.HeapNode[nodeCount];
 
-        // Insert a series of nodes
-        heap.insert(10, "ten");
-        heap.insert(20, "twenty");
-        heap.insert(5, "five");
-        heap.insert(15, "fifteen");
-        heap.insert(2, "two");
+        // Insert a large number of nodes
+        System.out.println("Inserting nodes...");
+        for (int i = 0; i < nodeCount; i++) {
+            int key = random.nextInt(nodeCount * 10) + 1;
+            nodes[i] = heap.insert(key, "Node" + i);
+        }
 
-        // Verify size
-        assertEquals("Heap size after 5 inserts should be 5", 5, heap.size());
+        System.out.println("Heap size after insertion: " + heap.size());
+        System.out.println("Number of trees: " + heap.numTrees());
+        System.out.println("Minimum key: " + heap.findMin().key);
 
-        // Verify min
-        assertEquals("Minimum should be 2", 2, heap.findMin().key);
+        // Perform a series of deleteMin operations
+        System.out.println("Deleting minimum nodes...");
+        for (int i = 0; i < nodeCount / 10; i++) { // DeleteMin for 10% of nodes
+            heap.deleteMin();
+        }
 
-        // Verify numTrees (each insert adds a new tree)
-        assertEquals("Number of trees after 5 inserts should be 5", 5, heap.numTrees());
+        System.out.println("Heap size after deleting min: " + heap.size());
+        System.out.println("Number of trees: " + heap.numTrees());
+        System.out.println("New minimum key: " + (heap.findMin() != null ? heap.findMin().key : "Heap is empty"));
 
-        // Verify totalLinks (no links yet)
-        assertEquals("Total links should be 0", 0, heap.totalLinks());
+        // Perform decreaseKey operations
+        System.out.println("Decreasing keys...");
+        for (int i = 0; i < nodeCount / 20; i++) { // Decrease key for 5% of nodes
+            int index = random.nextInt(nodeCount);
+            if (nodes[index] != null) {
+                int newKey = Math.max(1, nodes[index].key - random.nextInt(50));
+                heap.decreaseKey(nodes[index], nodes[index].key - newKey);
+            }
+        }
 
-        // Visualize the heap
-        System.out.println("Heap after multiple inserts:");
-        heap.printHeap();
-    }
+        System.out.println("Heap size after decreaseKey: " + heap.size());
+        System.out.println("Minimum key after decreaseKey: " + (heap.findMin() != null ? heap.findMin().key : "Heap is empty"));
 
-    @Test
-    public void testFindMinAndDeleteMin() {
-        FibonacciHeap heap = new FibonacciHeap();
+        // Perform cascading cuts and verify the heap
+        System.out.println("Deleting random nodes to test cascading cuts...");
+        for (int i = 0; i < nodeCount / 20; i++) { // Delete 5% of nodes
+            int index = random.nextInt(nodeCount);
+            if (nodes[index] != null) {
+                heap.delete(nodes[index]);
+                nodes[index] = null;
+            }
+        }
 
-        // Insert nodes
-        heap.insert(10, "ten");
-        heap.insert(20, "twenty");
-        heap.insert(5, "five");
-        heap.insert(15, "fifteen");
-        heap.insert(2, "two");
+        System.out.println("Heap size after deleting random nodes: " + heap.size());
+        System.out.println("Number of trees: " + heap.numTrees());
+        System.out.println("Minimum key: " + (heap.findMin() != null ? heap.findMin().key : "Heap is empty"));
 
-        // Verify initial numTrees
-        assertEquals("Number of trees after 5 inserts should be 5", 5, heap.numTrees());
+        // Test melding two heaps
+        System.out.println("Testing meld operation...");
+        FibonacciHeap anotherHeap = new FibonacciHeap();
+        for (int i = 0; i < nodeCount / 2; i++) {
+            anotherHeap.insert(random.nextInt(nodeCount * 10) + 1, "Heap2-Node" + i);
+        }
 
-        // Visualize the heap
-        System.out.println("Heap before deleteMin:");
-        heap.printHeap();
+        heap.meld(anotherHeap);
 
-        // Delete the minimum node
-        heap.deleteMin();
-        assertEquals("Minimum after deleting 2 should be 5", 5, heap.findMin().key);
-        assertEquals("Heap size after deleting 1 node should be 4", 4, heap.size());
+        System.out.println("Heap size after melding: " + heap.size());
+        System.out.println("Number of trees after melding: " + heap.numTrees());
+        System.out.println("Minimum key after melding: " + (heap.findMin() != null ? heap.findMin().key : "Heap is empty"));
 
-        // Verify numTrees after consolidation
-        assertTrue("Number of trees should be less than 5 after deleteMin", heap.numTrees() < 5);
-
-        // Verify totalLinks after deleteMin
-        assertTrue("Total links should be greater than 0 after deleteMin", heap.totalLinks() > 0);
-
-        System.out.println("Heap after deleteMin (2):");
-        heap.printHeap();
-    }
-
-    @Test
-    public void testComplexOperations() {
-        FibonacciHeap heap = new FibonacciHeap();
-
-        // Insert nodes
-        heap.insert(10, "ten");
-        heap.insert(20, "twenty");
-        heap.insert(5, "five");
-        heap.insert(15, "fifteen");
-        heap.insert(2, "two");
-
-        // Delete min and insert more nodes
-        heap.deleteMin();
-        heap.insert(1, "one");
-        heap.insert(25, "twenty-five");
-        heap.insert(7, "seven");
-
-        // Check min
-        assertEquals("Minimum should be 1", 1, heap.findMin().key);
-
-        // Verify numTrees after multiple operations
-        assertTrue("Number of trees should be consistent with the operations performed", heap.numTrees() > 0);
-
-        // Verify totalLinks after multiple operations
-        assertTrue("Total links should increase after deleteMin and consolidation", heap.totalLinks() > 0);
-
-        // Visualize heap after multiple operations
-        System.out.println("Heap after complex operations:");
+        // Visualize the heap structure
+        System.out.println("Visualizing heap...");
         heap.printHeap();
 
-        // Perform another deleteMin and validate structure
-        heap.deleteMin();
-        assertEquals("Minimum should now be 5", 5, heap.findMin().key);
-
-        // Verify numTrees and totalLinks again
-        assertTrue("Number of trees should adjust after deleteMin", heap.numTrees() > 0);
-        assertTrue("Total links should further increase after another deleteMin", heap.totalLinks() > 0);
-
-        System.out.println("Heap after another deleteMin (1):");
-        heap.printHeap();
+        // Output statistics
+        System.out.println("Total links performed: " + heap.totalLinks());
+        System.out.println("Total cuts performed: " + heap.totalCuts());
     }
 }

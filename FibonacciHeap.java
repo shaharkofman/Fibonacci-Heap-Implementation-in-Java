@@ -13,6 +13,12 @@ public class FibonacciHeap
 	public int size;
 	public int linkCounter;
 	public int treeCounter;
+	public int cutCounter;
+
+	public HeapNode getFirst() {
+		return min;
+	}
+
 
 	/**
 	 * 
@@ -75,6 +81,7 @@ public class FibonacciHeap
 			parent.child = child;
 			child.next = child;
 			child.prev = child;
+			child.parent = parent;
 		}
 		else
 		//If parent has children, add child to the left of parent child pointer
@@ -87,6 +94,7 @@ public class FibonacciHeap
 		}
 		parent.rank++;
 		child.mark = false; //In case child wasn't a tree root
+		treeCounter--;
 	}
 	/**
 	 * Consolidate the heap
@@ -96,18 +104,21 @@ public class FibonacciHeap
 			return;
 		}
 		// Create the "bucket" array
-		int maxRank = (int) Math.ceil(Math.log(size() + 1)) + 1;
+		int maxRank = (int) Math.ceil(Math.log(size() + 1)) + 10;
 		HeapNode[] rankArray = new HeapNode[maxRank];
 		Arrays.fill(rankArray, null);
 
 		HeapNode current = min;
-		HeapNode start = min; //exit condition for the do-while loop
+		int processed = 0;
+		int rootListSize = this.treeCounter;
 
-		do {
+		while (processed < rootListSize)
+		{
 			HeapNode node = current;
 			current = current.next; // Move to the next node before modifying the root list
 
 			int currRank = node.rank;
+
 			// Recursively link trees of the same rank until slot available
 			while (rankArray[currRank] != null) {
 				HeapNode other = rankArray[currRank];
@@ -124,12 +135,15 @@ public class FibonacciHeap
 				currRank++;
 			}
 			rankArray[currRank] = node;
+			processed++;
 
-		} while (current != start);
+		}
 		// Rebuild root list and find the new min
 		min = null;
+		treeCounter = 0;
 		for (HeapNode node : rankArray) {
 			if (node != null) {
+				treeCounter++;
 				if (min == null || node.key < min.key) {
 					min = node;
 				}
@@ -168,6 +182,8 @@ public class FibonacciHeap
 		//Take care of the children of the min node (if any)
 		if (min.child != null)
 		{
+			treeCounter += min.rank;
+
 			HeapNode firstChild = min.child;
 			HeapNode lastChild = min.child.prev;
 
@@ -200,6 +216,64 @@ public class FibonacciHeap
 	}
 
 	/**
+	 *
+	 * Cut the link between x and its parent y, and make x a root
+	 * pre: x.parent = y
+	 *
+	 */
+	public void cut(HeapNode x, HeapNode y)
+	{
+		x.parent = null;
+		x.mark = false;
+		y.rank--;
+
+		//If x has no siblings, set y's child pointer to null
+		if (x.next.equals(x))
+		{
+			y.child = null;
+		}
+		//Otherwise, remove x from sibling list
+		else
+		{
+			y.child = x.next;
+			x.prev.next = x.next;
+			x.next.prev = x.prev;
+		}
+
+		//Add x to the root list
+		x.next = min.next;
+		x.prev = min;
+		min.next.prev = x;
+		min.next = x;
+
+		treeCounter++;
+		cutCounter++;
+	}
+	/**
+	 *
+	 * Perform a cascading - cut process starting at x
+	 * pre: x != null, y != null
+	 *
+	 */
+	public void cascadingCut(HeapNode x, HeapNode y)
+	{
+		cut(x,y);
+
+		if (y.parent != null)
+		{
+			//If y is not a root and was not marked, mark it
+			if (!y.mark)
+			{
+				y.mark = true;
+			}
+			//Otherwise, recursively cut y from its parent
+			else
+			{
+				cascadingCut(y,y.parent);
+			}
+		}
+	}
+	/**
 	 * 
 	 * pre: 0<diff<x.key
 	 * 
@@ -207,8 +281,30 @@ public class FibonacciHeap
 	 * 
 	 */
 	public void decreaseKey(HeapNode x, int diff) 
-	{    
-		return; // should be replaced by student code
+	{
+		if (min == null || x == null)
+		{
+			return;
+		}
+		//Decrease the key of x, check if it's a new minimum
+		x.key -= diff;
+
+		//Edge case: x is a root, no need to fix the heap
+		if (x.parent == null)
+		{
+			return;
+		}
+		//Check for violation of heap property
+		if (x.key < x.parent.key)
+		{
+			HeapNode y = x.parent;
+			cascadingCut(x,y);
+		}
+		//Update the min node if necessary
+		if (x.key < min.key)
+		{
+			min = x;
+		}
 	}
 
 	/**
@@ -218,7 +314,8 @@ public class FibonacciHeap
 	 */
 	public void delete(HeapNode x) 
 	{    
-		return; // should be replaced by student code
+	    decreaseKey(x, x.key + 1);
+		deleteMin();
 	}
 
 
@@ -240,7 +337,7 @@ public class FibonacciHeap
 	 */
 	public int totalCuts()
 	{
-		return 0; // should be replaced by student code
+		return cutCounter;
 	}
 
 
@@ -251,7 +348,28 @@ public class FibonacciHeap
 	 */
 	public void meld(FibonacciHeap heap2)
 	{
-		return; // should be replaced by student code   		
+		//Concatenate the root lists
+		if (heap2.min != null)
+		{
+			if (min == null)
+			{
+				min = heap2.min;
+			}
+			else
+			{
+				HeapNode temp = min.next;
+				min.next = heap2.min.next;
+				heap2.min.next.prev = min;
+				heap2.min.next = temp;
+				temp.prev = heap2.min;
+				if (heap2.min.key < min.key)
+				{
+					min = heap2.min;
+				}
+			}
+			size += heap2.size;
+			treeCounter += heap2.treeCounter;
+		}
 	}
 
 	/**
@@ -273,6 +391,10 @@ public class FibonacciHeap
 	public int numTrees()
 	{
 		return treeCounter;
+	}
+
+	public boolean isEmpty() {
+		return min == null;
 	}
 
 	/**
@@ -300,6 +422,27 @@ public class FibonacciHeap
 			this.rank = 0;
 			this.mark = false;
 		}
+		public int getRank() {
+			return rank;
+		}
+		public boolean getMarked() {
+			return mark;
+		}
+		public HeapNode getParent() {
+			return parent;
+		}
+		public HeapNode getNext() {
+			return next;
+		}
+		public HeapNode getPrev() {
+			return prev;
+		}
+		public HeapNode getChild() {
+			return child;
+		}
+		public int getKey() {
+			return key;
+		}
 	}
 	public void printHeap() {
 		if (min == null) {
@@ -307,34 +450,39 @@ public class FibonacciHeap
 			return;
 		}
 
-		System.out.println("Root list:");
+		System.out.println("Fibonacci Heap Visualization:");
 		HeapNode current = min;
 		do {
-			printSubTree(current, 0);
+			printTree(current, 0, true);
 			current = current.next;
 		} while (current != min);
 	}
 
-	private void printSubTree(HeapNode node, int depth) {
+	private void printTree(HeapNode node, int depth, boolean isRoot) {
 		if (node == null) return;
 
 		// Indent based on depth
 		for (int i = 0; i < depth; i++) {
-			System.out.print("  ");
+			System.out.print("    ");
 		}
 
-		// Print the node
-		System.out.println("Key: " + node.key + ", Rank: " + node.rank);
+		// Root nodes are highlighted differently
+		if (isRoot) {
+			System.out.println(node.key + " (root)");
+		} else {
+			System.out.println("|-- " + node.key);
+		}
 
-		// Print children
+		// Recursively print children
 		HeapNode child = node.child;
 		if (child != null) {
 			HeapNode temp = child;
 			do {
-				printSubTree(temp, depth + 1);
+				printTree(temp, depth + 1, false);
 				temp = temp.next;
 			} while (temp != child);
 		}
 	}
+
 
 }
