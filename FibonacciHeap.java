@@ -186,8 +186,17 @@ public class FibonacciHeap
 		//Take care of the children of the min node (if any)
 		if (min.child != null)
 		{
+			HeapNode current = min.child;
+			while (current.parent != null)
+			{
+				HeapNode next = current.next;
+				cut(current, min);
+				current = next;
+			}
+			/*
+			Alternative implementation:
+			cutCounter += min.rank;
 			treeCounter += min.rank;
-
 			HeapNode firstChild = min.child;
 			HeapNode lastChild = min.child.prev;
 
@@ -204,7 +213,9 @@ public class FibonacciHeap
 
 			lastChild.next = min.next;
 			min.next.prev = lastChild;
+		*/
 		}
+
 		//Remove min from root list and optionally consolidate the heap
 		if (min.next.equals(min))
 		{
