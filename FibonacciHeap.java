@@ -9,11 +9,15 @@ import java.util.Arrays;
 public class FibonacciHeap
 {
 	public HeapNode min;
+	public HeapNode prevMin;
 	//All added attributes are maintained in O(1) time
 	public int size;
 	public int linkCounter;
 	public int treeCounter;
 	public int cutCounter;
+
+	//Empty constructor
+	public FibonacciHeap(){}
 
 	public HeapNode getFirst() {
 		return min;
@@ -226,6 +230,8 @@ public class FibonacciHeap
 		x.parent = null;
 		x.mark = false;
 		y.rank--;
+		treeCounter++;
+		cutCounter++;
 
 		//If x has no siblings, set y's child pointer to null
 		if (x.next.equals(x))
@@ -241,13 +247,24 @@ public class FibonacciHeap
 		}
 
 		//Add x to the root list
-		x.next = min.next;
-		x.prev = min;
-		min.next.prev = x;
-		min.next = x;
+		if (prevMin != null)
+		{
+			//x was decreased and is now the new min, use prevMin reference to add it to the root list
+			x.next = prevMin.next;
+			x.prev = prevMin;
+			prevMin.next.prev = x;
+			prevMin.next = x;
+			prevMin = null;
+		}
+		else
+		{
+			x.next = min.next;
+			x.prev = min;
+			min.next.prev = x;
+			min.next = x;
+		}
 
-		treeCounter++;
-		cutCounter++;
+
 	}
 	/**
 	 *
@@ -289,6 +306,13 @@ public class FibonacciHeap
 		//Decrease the key of x, check if it's a new minimum
 		x.key -= diff;
 
+		//Update the min node if necessary
+		if (x.key < min.key)
+		{
+			prevMin = min; //Reference to the previous min, for potential cascading cut
+			min = x;
+		}
+
 		//Edge case: x is a root, no need to fix the heap
 		if (x.parent == null)
 		{
@@ -299,11 +323,6 @@ public class FibonacciHeap
 		{
 			HeapNode y = x.parent;
 			cascadingCut(x,y);
-		}
-		//Update the min node if necessary
-		if (x.key < min.key)
-		{
-			min = x;
 		}
 	}
 
