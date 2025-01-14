@@ -205,7 +205,7 @@ public class FibonacciHeap
 			lastChild.next = min.next;
 			min.next.prev = lastChild;
 		}
-		//Remove min from root list and consolidate the heap
+		//Remove min from root list and optionally consolidate the heap
 		if (min.next.equals(min))
 		{
 			min = null;
@@ -214,8 +214,20 @@ public class FibonacciHeap
 		{
 			min.prev.next = min.next;
 			min.next.prev = min.prev;
-			min = min.next; //Temporary min
-			successiveLinking();
+
+			//Case: Call came directly
+			if (!min.isFakeMin)
+			{
+
+				min = min.next; //Temporary min
+				successiveLinking();
+			}
+			//Case: Call came from method delete()
+			else
+			{
+				return;
+			}
+
 		}
 	}
 
@@ -332,9 +344,22 @@ public class FibonacciHeap
 	 *
 	 */
 	public void delete(HeapNode x) 
-	{    
+	{
+		if (!(x instanceof HeapNode)) {return;}
+
+		//If node to delete is already minimum, execute deleteMin
+		if (x == min)
+		{
+			deleteMin();
+			return;
+		}
+
+		//Else, execute decreaseKey and deleteMin (without consolidation)
+		HeapNode trueMin = min; //Save the current min
 	    decreaseKey(x, x.key + 1);
+		x.isFakeMin = true;
 		deleteMin();
+		min = trueMin; //Restore the min
 	}
 
 
@@ -368,7 +393,7 @@ public class FibonacciHeap
 	public void meld(FibonacciHeap heap2)
 	{
 		//Concatenate the root lists
-		if (heap2.min != null)
+		if (heap2 instanceof FibonacciHeap && heap2.min != null)
 		{
 			if (min == null)
 			{
@@ -429,6 +454,7 @@ public class FibonacciHeap
 		public HeapNode parent;
 		public int rank;
 		public boolean mark;
+		public boolean isFakeMin;
 
 		public HeapNode(int key, String info)
 		{
@@ -440,6 +466,7 @@ public class FibonacciHeap
 			this.parent = null;
 			this.rank = 0;
 			this.mark = false;
+			this.isFakeMin = false;
 		}
 		public int getRank() {
 			return rank;
