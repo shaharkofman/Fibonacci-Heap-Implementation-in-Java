@@ -18,6 +18,8 @@ public class FibonacciHeapTest {
             testSize();
             testFindMin();
             testInsert();
+            testDeleteMinMultipleOperations();
+            testDeleteMinSize();
             testDeleteMin();
             System.out.println("All tests passed successfully! ✅");
         } catch (AssertionError e) {
@@ -286,6 +288,49 @@ public class FibonacciHeapTest {
 
         System.out.println("✅ Insert test passed");
     }
+    public void testDeleteMinMultipleOperations() {
+        System.out.println("Testing multiple deleteMin operations...");
+        FibonacciHeap heap = new FibonacciHeap();
+        int numElements = 1000;
+
+        // Insert multiple elements into the heap
+        for (int i = 1; i <= numElements; i++) {
+            heap.insert(i, "Value" + i);
+        }
+
+        assert heap.size() == numElements : "Initial size mismatch. Expected: " + numElements + ", Got: " + heap.size();
+
+        // Perform deleteMin operations and verify size consistency
+        for (int i = 1; i <= numElements; i++) {
+            heap.deleteMin();
+            assert heap.size() == numElements - i : "Size mismatch after deleteMin #" + i +
+                    ". Expected: " + (numElements - i) + ", Got: " + heap.size();
+        }
+
+        // Ensure the heap is empty after all deleteMin operations
+        assert heap.isEmpty() : "Heap should be empty after all elements are removed";
+
+    }
+    public void testDeleteMinSize() {
+        FibonacciHeap heap = new FibonacciHeap();
+        int n = 100;
+
+        // Insert elements
+        for (int i = 1; i <= n; i++) {
+            heap.insert(i, "");
+        }
+
+        // Delete half the elements
+        for (int i = 1; i <= n / 2; i++) {
+            heap.deleteMin();
+            assert heap.size() == n - i : "Size mismatch after deleteMin #" + i;
+        }
+
+        // Final size should be half the initial size
+        assert heap.size() == n / 2 : "Final size mismatch. Expected: " + (n / 2) + ", Got: " + heap.size();
+    }
+
+
 
     private void testDeleteMin() {
         System.out.println("Testing deleteMin...");

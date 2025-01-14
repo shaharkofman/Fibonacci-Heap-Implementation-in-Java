@@ -105,25 +105,29 @@ public class FibonacciHeap
 	 */
 	public void successiveLinking() {
 		if (min == null || min.next == min) {
-			return;
+			return; // Edge case: Heap has one or no elements
 		}
-		// Create the "bucket" array
-		int maxRank = (int) Math.ceil(Math.log(size() + 1)) + 10;
+
+		// Predefine a sufficiently large size for rankArray
+		int maxRank = (int) (10*Math.ceil(Math.log(size() + 1))) + 10;
 		HeapNode[] rankArray = new HeapNode[maxRank];
 		Arrays.fill(rankArray, null);
 
+		// Step 1: Collect all root nodes in an array
+		int rootListSize = treeCounter;
+		HeapNode[] rootList = new HeapNode[rootListSize];
 		HeapNode current = min;
-		int processed = 0;
-		int rootListSize = this.treeCounter;
 
-		while (processed < rootListSize)
-		{
-			HeapNode node = current;
-			current = current.next; // Move to the next node before modifying the root list
+		for (int i = 0; i < rootListSize; i++) {
+			rootList[i] = current;
+			current = current.next;
+		}
 
+		// Step 2: Process each root node
+		for (HeapNode node : rootList) {
 			int currRank = node.rank;
 
-			// Recursively link trees of the same rank until slot available
+			// Recursively link trees of the same rank until an empty slot is found
 			while (rankArray[currRank] != null) {
 				HeapNode other = rankArray[currRank];
 
@@ -134,41 +138,43 @@ public class FibonacciHeap
 				linkCounter++;
 				treeCounter--;
 
-				rankArray[currRank] = null;
-				node = parent;
+				rankArray[currRank] = null; // Clear the slot
+				node = parent; // Update the node to the new tree
 				currRank++;
 			}
-			rankArray[currRank] = node;
-			processed++;
-
+			rankArray[currRank] = node; // Store the final tree in its slot
 		}
-		// Rebuild root list and find the new min
+
+		// Step 3: Rebuild the root list and determine the new min
 		min = null;
 		treeCounter = 0;
+
 		for (HeapNode node : rankArray) {
 			if (node != null) {
 				treeCounter++;
 				if (min == null || node.key < min.key) {
 					min = node;
 				}
-				// Configure the new root list
-				if (min != node)
-				{
-					//If min is not the current node, add the node to the right of min
+
+				// Add the node to the root list
+				if (min != node) {
 					node.next = min.next;
 					node.prev = min;
 					min.next.prev = node;
 					min.next = node;
-				}
-				else
-				{
-					//First node in the list, or only node
+				} else {
 					node.next = node;
 					node.prev = node;
 				}
 			}
 		}
+
+		// Final safety check
+		if (min == null) {
+			throw new IllegalStateException("Heap is not empty, but min is null!");
+		}
 	}
+
 	/**
 	 * 
 	 * Delete the minimal item
@@ -186,6 +192,7 @@ public class FibonacciHeap
 		//Take care of the children of the min node (if any)
 		if (min.child != null)
 		{
+			/*
 			HeapNode current = min.child;
 			while (current.parent != null)
 			{
@@ -193,8 +200,10 @@ public class FibonacciHeap
 				cut(current, min);
 				current = next;
 			}
-			/*
-			Alternative implementation:
+			*/
+
+
+			//Alternative implementation:
 			cutCounter += min.rank;
 			treeCounter += min.rank;
 			HeapNode firstChild = min.child;
@@ -213,11 +222,11 @@ public class FibonacciHeap
 
 			lastChild.next = min.next;
 			min.next.prev = lastChild;
-		*/
+
 		}
 
 		//Remove min from root list and optionally consolidate the heap
-		if (min.next.equals(min))
+		if (treeCounter == 1)
 		{
 			min = null;
 		}
