@@ -8,6 +8,8 @@ import java.util.Arrays;
  */
 public class FibonacciHeap
 {
+	public static final double GOLDEN_RATIO = (1 + Math.sqrt(5)) / 2;
+
 	public HeapNode min;
 	public HeapNode prevMin;
 	//All added attributes are maintained in O(1) time
@@ -56,6 +58,26 @@ public class FibonacciHeap
 		treeCounter++;
 		return newNode;
 	}
+
+	public HeapNode insertAfter(HeapNode x, HeapNode y) {
+		if (y == null) {
+			return null;
+		}
+		if (x == null) {
+			min = y;
+			size++;
+			treeCounter++;
+			return y;
+		}
+		HeapNode temp = x.next;
+		x.next = y;
+		y.prev = x;
+		y.next = temp;
+		temp.prev = y;
+		size++;
+		treeCounter++;
+		return y;
+	}
 	/**
 	 * 
 	 * Return the minimal HeapNode, null if empty.
@@ -99,10 +121,11 @@ public class FibonacciHeap
 		parent.rank++;
 		child.mark = false; //In case child wasn't a tree root
 		treeCounter--;
+		linkCounter++;
 	}
 	/**
 	 * Consolidate the heap
-	 */
+
 	public void successiveLinking() {
 		if (min == null || min.next == min) {
 			return; // Edge case: Heap has one or no elements
@@ -174,7 +197,69 @@ public class FibonacciHeap
 			throw new IllegalStateException("Heap is not empty, but min is null!");
 		}
 	}
+	*/
+	public HeapNode[] toBuckets(HeapNode x)
+	{
+		//Create an array of buckets
+		HeapNode[] buckets = new HeapNode[(int) Math.log(size() / Math.log(GOLDEN_RATIO)) + 1];
+		Arrays.fill(buckets, null);
 
+		//
+		x.prev.next = null;
+		while (x != null)
+		{
+			HeapNode y = x;
+			x = x.next;
+			while (buckets[y.rank] != null)
+			{
+				linkTrees(y, buckets[y.rank]);
+				y = (y.key < buckets[y.rank].key) ? y : buckets[y.rank];
+				if (y.rank > 0) {
+					buckets[y.rank - 1] = null; //y's rank has increased
+				}
+				else {
+					buckets[y.rank] = null;
+					y.rank++;
+				}
+				buckets[y.rank] = y;
+			}
+
+		}
+		return buckets;
+	}
+
+	public HeapNode fromBuckets(HeapNode[] buckets)
+	{
+		treeCounter = 0;
+		HeapNode x = null;
+		for (int i = 0; i < (int) Math.log(size() / Math.log(GOLDEN_RATIO)) + 1; i++)
+		{
+			if (buckets[i] != null)
+			{
+				if (x == null) {
+					x = buckets[i];
+					x.next = x;
+					x.prev = x;
+				}
+				else
+				{
+					insertAfter(x, buckets[i]);
+					treeCounter++;
+					if (buckets[i].key < x.key)
+					{
+						x = buckets[i];
+					}
+				}
+			}
+		}
+		return x;
+	}
+
+	public HeapNode consolidate(HeapNode x)
+	{
+		HeapNode[] buckets = toBuckets(x);
+		return fromBuckets(buckets);
+	}
 	/**
 	 * 
 	 * Delete the minimal item
@@ -240,7 +325,7 @@ public class FibonacciHeap
 			{
 
 				min = min.next; //Temporary min
-				successiveLinking();
+				consolidate(min);
 			}
 			//Case: Call came from method delete()
 			else
