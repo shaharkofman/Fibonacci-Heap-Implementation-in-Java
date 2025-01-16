@@ -218,8 +218,6 @@ public class FibonacciHeap
 		{
 			return;
 		}
-
-		//treeCounter += min.rank - 1; // number of roots increased by number of children, minus the min node
 		size--;
 
 		//Take care of the children of the min node (if any)
@@ -262,6 +260,7 @@ public class FibonacciHeap
 		if (treeCounter == 1)
 		{
 			min = null;
+			treeCounter = 0;
 		}
 		else
 		{
@@ -278,6 +277,7 @@ public class FibonacciHeap
 			//Case: Call came from method delete()
 			else
 			{
+				treeCounter --;
 				return;
 			}
 
