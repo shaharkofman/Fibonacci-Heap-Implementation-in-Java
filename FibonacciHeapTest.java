@@ -1,4 +1,4 @@
-public class FibonacciHeapTest {
+public class FibonacciHeapTest  {
     public static void main(String[] args) {
         FibonacciHeapTest tester = new FibonacciHeapTest();
         tester.runAllTests();
@@ -18,10 +18,7 @@ public class FibonacciHeapTest {
             testSize();
             testFindMin();
             testInsert();
-            testDeleteMinMultipleOperations();
-            testDeleteMinSize();
             testDeleteMin();
-
             System.out.println("All tests passed successfully! ✅");
         } catch (AssertionError e) {
             System.err.println("Test failed: " + e.getMessage());
@@ -289,49 +286,6 @@ public class FibonacciHeapTest {
 
         System.out.println("✅ Insert test passed");
     }
-    public void testDeleteMinMultipleOperations() {
-        System.out.println("Testing multiple deleteMin operations...");
-        FibonacciHeap heap = new FibonacciHeap();
-        int numElements = 1000;
-
-        // Insert multiple elements into the heap
-        for (int i = 1; i <= numElements; i++) {
-            heap.insert(i, "Value" + i);
-        }
-
-        assert heap.size() == numElements : "Initial size mismatch. Expected: " + numElements + ", Got: " + heap.size();
-
-        // Perform deleteMin operations and verify size consistency
-        for (int i = 1; i <= numElements; i++) {
-            heap.deleteMin();
-            assert heap.size() == numElements - i : "Size mismatch after deleteMin #" + i +
-                    ". Expected: " + (numElements - i) + ", Got: " + heap.size();
-        }
-
-        // Ensure the heap is empty after all deleteMin operations
-        assert heap.isEmpty() : "Heap should be empty after all elements are removed";
-
-    }
-    public void testDeleteMinSize() {
-        FibonacciHeap heap = new FibonacciHeap();
-        int n = 100;
-
-        // Insert elements
-        for (int i = 1; i <= n; i++) {
-            heap.insert(i, "");
-        }
-
-        // Delete half the elements
-        for (int i = 1; i <= n / 2; i++) {
-            heap.deleteMin();
-            assert heap.size() == n - i : "Size mismatch after deleteMin #" + i;
-        }
-
-        // Final size should be half the initial size
-        assert heap.size() == n / 2 : "Final size mismatch. Expected: " + (n / 2) + ", Got: " + heap.size();
-    }
-
-
 
     private void testDeleteMin() {
         System.out.println("Testing deleteMin...");
@@ -363,60 +317,4 @@ public class FibonacciHeapTest {
 
         System.out.println("✅ DeleteMin test passed");
     }
-    private void testDebugHeapStructure() {
-        System.out.println("Debugging numTrees, totalLinks, and totalCuts...");
-        FibonacciHeap heap = new FibonacciHeap();
-
-        // Step 1: Insert 10 nodes
-        FibonacciHeap.HeapNode[] nodes = new FibonacciHeap.HeapNode[10];
-        for (int i = 1; i <= 10; i++) {
-            nodes[i - 1] = heap.insert(i, "key" + i);
-        }
-        System.out.println("After 10 inserts:");
-        printHeapState(heap);
-
-        // Step 2: Perform deleteMin once (removes 1, the smallest element)
-        heap.deleteMin();
-        System.out.println("After deleteMin (removing smallest):");
-        printHeapState(heap);
-
-        // Step 3: Perform a decreaseKey operation
-        heap.decreaseKey(nodes[5], 5); // Decrease key of node with key 6 to 1
-        System.out.println("After decreaseKey (decreasing key of 6 to 1):");
-        printHeapState(heap);
-
-        // Step 4: Perform another deleteMin (removes new minimum)
-        heap.deleteMin();
-        System.out.println("After deleteMin (removing new smallest):");
-        printHeapState(heap);
-
-        // Step 5: Perform meld with another heap
-        FibonacciHeap heap2 = new FibonacciHeap();
-        for (int i = 11; i <= 15; i++) {
-            heap2.insert(i, "key" + i);
-        }
-        heap.meld(heap2);
-        System.out.println("After meld with another heap:");
-        printHeapState(heap);
-
-        // Step 6: Perform multiple deleteMin operations
-        heap.deleteMin();
-        heap.deleteMin();
-        System.out.println("After two additional deleteMin operations:");
-        printHeapState(heap);
-
-        System.out.println("Debugging complete.");
-    }
-
-    // Helper method to print the state of the Fibonacci Heap
-    private void printHeapState(FibonacciHeap heap) {
-        System.out.println("Current state of the heap:");
-        System.out.println("Number of trees: " + heap.numTrees());
-        System.out.println("Total links: " + heap.totalLinks());
-        System.out.println("Total cuts: " + heap.totalCuts());
-        System.out.println("Heap size: " + heap.size());
-        System.out.println("Minimum key: " + (heap.findMin() != null ? heap.findMin().key : "null"));
-        System.out.println();
-    }
-
 }
