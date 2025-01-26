@@ -478,9 +478,6 @@ public class FibonacciHeap
 		return treeCounter;
 	}
 
-	public boolean isEmpty() {
-		return min == null;
-	}
 
 	public boolean empty() {
 		return min == null;
