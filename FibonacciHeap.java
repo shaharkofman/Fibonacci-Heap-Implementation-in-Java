@@ -1,10 +1,8 @@
 import java.util.Arrays;
 
 /**
- * id1: 211540588
  * name1: Shahar Kofman
  * username1: shaharkofman
- * id2: 211633813
  * name2: Saar Guy
  * username2: saarguy
  *
@@ -517,3 +515,4 @@ public class FibonacciHeap
 	}
 
 }
+
